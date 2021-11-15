@@ -16,11 +16,11 @@ public class ArrayDequeTest {
     @Test
     public void testAddAndSize() {
         ArrayDeque<Integer> L = new ArrayDeque<>();
-        L.addLast(99);
+      //  L.addLast(99);
         L.addFirst(36);
         L.addFirst(32);
         L.printDeque();
-        assertEquals(3, L.size());
+        assertEquals(2, L.size());
     }
 
 
@@ -36,13 +36,63 @@ public class ArrayDequeTest {
 
 
     @Test
-    public void testGet() {
+    public void testResize1() {
         ArrayDeque<Integer> L = new ArrayDeque<>();
         L.addLast(99);
-        assertEquals((Integer) 99, L.get(0));
+        assertEquals((Integer) 99, L.getLast());
         L.addLast(36);
-        assertEquals((Integer)99, L.get(0));
-        assertEquals((Integer)36, L.get(1));
+        L.addLast(36);
+        L.addLast(36);
+        L.addLast(36);
+        L.addLast(36);
+        L.addLast(36);
+        L.addLast(36);
+        L.addLast(36);
+        L.printDeque();
+        assertEquals((Integer)99, L.getFirst());
+        assertEquals((Integer)36, L.getLast());
+    }
+
+    @Test
+    public void testResize2() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addLast(99);
+        assertEquals((Integer) 99, L.getLast());
+        for (int i = 0; i < 8; i++){
+            L.addLast(36);
+        }
+        for (int i = 0; i < 8; i++){
+            L.removeLast();
+            L.printDeque();
+        }
+    }
+
+    @Test
+    public void testResize3() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addLast(99);
+        assertEquals((Integer) 99, L.getLast());
+        for (int i = 0; i < 8; i++){
+            L.addLast(36);
+        }
+        for (int i = 0; i < 8; i++){
+            L.removeFirst();
+            L.printDeque();
+        }
+    }
+
+    @Test
+    public void testResize4() {
+        ArrayDeque<Integer> L = new ArrayDeque<>();
+        L.addLast(99);
+        assertEquals((Integer) 99, L.getLast());
+        for (int i = 0; i < 32; i++){
+            L.addLast(36);
+        }
+        for (int i = 0; i < 30; i++){
+            L.removeFirst();
+            L.printDeque();
+        }
     }
 
 
@@ -50,13 +100,14 @@ public class ArrayDequeTest {
     public void testRemove() {
         ArrayDeque<Integer> L = new ArrayDeque<>();
         L.addLast(99);
-        assertEquals((Integer)99, L.get(0));
+        assertEquals((Integer)99, L.getLast());
         L.addLast(36);
-        assertEquals((Integer)36, L.get(1));
+        assertEquals((Integer)36, L.getLast());
         L.removeLast();
         L.addFirst(44);
         L.printDeque();
         assertEquals((Integer)44, L.removeFirst());
+        L.printDeque();
         assertEquals((Integer)99, L.getLast());
         L.addLast(100);
         assertEquals((Integer)100, L.getLast());
