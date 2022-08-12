@@ -17,6 +17,13 @@ public class KdTree implements PointSet{
         public Node (Point point){
             p = point;
         }
+        public double shortestDis(Point o) {
+            if (orientation == horizontal) {
+                return Math.pow(o.getX() - p.getX(), 2);
+            } else {
+                return Math.pow(o.getY() - p.getY(), 2);
+            }
+        }
     }
 
     public KdTree(List<Point> points){
@@ -34,20 +41,20 @@ public class KdTree implements PointSet{
         if (newNode.p.equals(root.p)){
             return root;
         }
-        int cmp = compNode(root, newNode);
+        int cmp = compNode(newNode, root);
         if (cmp < 0){
             root.leftChild = add(newNode, root.leftChild, !root.orientation);
         }
-        else if (cmp >= 0){
+        else{
             root.rightChild = add(newNode, root.rightChild, !root.orientation);
         }
         return root;
     }
 
-    private int compNode(Node targetNode, Node newNode){
+    private int compNode(Node newNode, Node targetNode){
         if (targetNode.orientation == horizontal) {
             //compare horizontal
-            // < 0 newNode < targetNode;
+            // newNode < targetNode;
             return Double.compare(newNode.p.getX(), targetNode.p.getX());
         }
         else{
@@ -59,16 +66,13 @@ public class KdTree implements PointSet{
     public Point nearest(double x, double y) {
         //initialize
         Point goal = new Point(x, y);
-        Node best = nearestHelper(root, goal, null);
+        Node best = nearestHelper(root, goal, root);
         return best.p;
     }
 
     private Node nearestHelper (Node n, Point goal, Node best){
         if (n == null){
             return best;
-        }
-        if (best == null){
-            best = root;
         }
         double n_distance = Point.distance(n.p, goal);
         double best_distance = Point.distance(best.p, goal);
@@ -77,35 +81,21 @@ public class KdTree implements PointSet{
         }
         Node goodSide, badSide;
         Node target = new Node(goal);
-        int cmp = compNode(n, target);
-        if (cmp > 0){
+        int cmp = compNode(target, n);
+        if (cmp < 0){
             goodSide = n.leftChild;
             badSide = n.rightChild;
-        }else if (cmp < 0){
+        }else{
             goodSide = n.rightChild;
             badSide = n.leftChild;
-        }else{
-            return best;
         }
         best = nearestHelper(goodSide, goal, best);
-        if (badSide == null){
-            return best;
-        }
-        if (badSide.orientation == horizontal){
-            double badSideBest = Math.pow(goal.getX() - badSide.p.getX(), 2);
-            cmp = Double.compare(Point.distance(best.p, goal), badSideBest);
-            if (cmp >=0){
-                best = nearestHelper(badSide, goal, best);
-            }
-        }else{
-            double badSideBest = Math.pow(goal.getY() - badSide.p.getY(), 2);
-            cmp = Double.compare(Point.distance(best.p, goal), badSideBest);
-            if (cmp >= 0){
-                best = nearestHelper(badSide, goal, best);
-            }
+        if (Double.compare(n.shortestDis(goal), Point.distance(best.p, goal)) < 0){
+            best = nearestHelper(badSide, goal, best);
         }
         return best;
     }
+
 
     public static void main(String[] args) {
         Point p1 = new Point(2, 3);
