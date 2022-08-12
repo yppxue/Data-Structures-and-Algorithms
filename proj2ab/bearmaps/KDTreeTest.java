@@ -1,5 +1,6 @@
 package bearmaps;
 
+import edu.princeton.cs.algs4.Stopwatch;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -42,19 +43,89 @@ public class KDTreeTest {
         }
         return points;
     }
+
     @Test
     public void randomTest(){
         int N = 1000;
         int M = 100;
-        List<Point> points = new ArrayList<>(N);
-        List<Point> compPoints = new ArrayList<>(M);
-        points = nDoubles(N);
-        compPoints = nDoubles(M);
+        randomTest(N, M);
+    }
+
+    public void randomTest(int nPoints, int nQueries){
+        List<Point> points = nDoubles(nPoints);
+        List<Point> compPoints = nDoubles(nQueries);
         KdTree kd = new KdTree(points);
         NaivePointSet np = new NaivePointSet(points);
         for (Point point : compPoints){
             assertEquals(kd.nearest(point.getX(), point.getY()), np.nearest(point.getX(), point.getY()));
         }
+    }
+
+    private void printTimingTable(List<Integer> Ns, List<Double> times, List<Integer> opCounts) {
+        System.out.printf("%12s %12s %12s %12s\n", "N", "time (s)", "# ops", "microsec/op");
+        System.out.printf("------------------------------------------------------------\n");
+        for (int i = 0; i < Ns.size(); i += 1) {
+            int N = Ns.get(i);
+            double time = times.get(i);
+            int opCount = opCounts.get(i);
+            double timePerOp = time / opCount * 1e6;
+            System.out.printf("%12d %12.2f %12d %12.2f\n", N, time, opCount, timePerOp);
+        }
+    }
+    @Test
+    public void timingTest() {
+        timeKdTree();
+        timeNaivePointSet();
+    }
+
+    public void timeKdTree() {
+        // TODO: YOUR CODE HERE
+        List<Integer> Ns = new ArrayList<>();
+        List<Double> times = new ArrayList<>();
+        List<Integer> opCounts = new ArrayList<>();
+        for (int i = 125; i <= 50000; i = i*2){
+            Ns.add(i);
+            opCounts.add(i);
+        }
+        for (int i = 0; i < Ns.size(); i++){
+            Stopwatch sw = new Stopwatch();
+            List<Point> points = nDoubles(Ns.get(i));
+            List<Point> compPoints = nDoubles(opCounts.get(i));
+            KdTree kd = new KdTree(points);
+            for (Point point : compPoints) {
+                kd.nearest(point.getX(), point.getY());
+            }
+            double timeInSeconds = sw.elapsedTime();
+            times.add(timeInSeconds);
+        }
+        System.out.println("Timing table for Kd-Tree Nearest");
+        printTimingTable(Ns, times, opCounts);
+
+    }
+
+    public void timeNaivePointSet() {
+        // TODO: YOUR CODE HERE
+        List<Integer> Ns = new ArrayList<>();
+        List<Double> times = new ArrayList<>();
+        List<Integer> opCounts = new ArrayList<>();
+        for (int i = 125; i <= 50000; i = i*2){
+            Ns.add(i);
+            opCounts.add(i);
+        }
+        for (int i = 0; i < Ns.size(); i++){
+            Stopwatch sw = new Stopwatch();
+            List<Point> points = nDoubles(Ns.get(i));
+            List<Point> compPoints = nDoubles(opCounts.get(i));
+            NaivePointSet np = new NaivePointSet(points);
+            for (Point point : compPoints) {
+                np.nearest(point.getX(), point.getY());
+            }
+            double timeInSeconds = sw.elapsedTime();
+            times.add(timeInSeconds);
+        }
+        System.out.println("Timing table for Naive Nearest");
+        printTimingTable(Ns, times, opCounts);
+
     }
 
 
