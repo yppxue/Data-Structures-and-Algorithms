@@ -1,5 +1,6 @@
 package bearmaps;
 
+import java.nio.channels.Pipe;
 import java.util.List;
 
 public class KdTree implements PointSet{
@@ -74,8 +75,35 @@ public class KdTree implements PointSet{
         if (n_distance < best_distance){
             best = n;
         }
-        best = nearestHelper(n.leftChild, goal, best);
-        best = nearestHelper(n.rightChild, goal, best);
+        Node goodSide, badSide;
+        Node target = new Node(goal);
+        int cmp = compNode(n, target);
+        if (cmp > 0){
+            goodSide = n.leftChild;
+            badSide = n.rightChild;
+        }else if (cmp < 0){
+            goodSide = n.rightChild;
+            badSide = n.leftChild;
+        }else{
+            return best;
+        }
+        best = nearestHelper(goodSide, goal, best);
+        if (badSide == null){
+            return best;
+        }
+        if (badSide.orientation == horizontal){
+            double badSideBest = Math.pow(goal.getX() - badSide.p.getX(), 2);
+            cmp = Double.compare(Point.distance(best.p, goal), badSideBest);
+            if (cmp >=0){
+                best = nearestHelper(badSide, goal, best);
+            }
+        }else{
+            double badSideBest = Math.pow(goal.getY() - badSide.p.getY(), 2);
+            cmp = Double.compare(Point.distance(best.p, goal), badSideBest);
+            if (cmp >= 0){
+                best = nearestHelper(badSide, goal, best);
+            }
+        }
         return best;
     }
 
