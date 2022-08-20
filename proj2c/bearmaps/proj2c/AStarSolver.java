@@ -109,15 +109,12 @@ public class AStarSolver<Vertex> implements ShortestPathsSolver<Vertex> {
 
     private List<Vertex> solutionList(Vertex start, Vertex end){
         Vertex e = end;
-        List<Vertex> bestRoute = new ArrayList<>();
-        while (true){
-            bestRoute.add(e);
-            if(e == start){
-                break;
-            }
+        LinkedList<Vertex> bestRoute = new LinkedList<>();
+        bestRoute.add(end);
+        while (!e.equals(start)){
             e = edgeToMap.get(e);
+            bestRoute.addFirst(e);
         }
-        Collections.reverse(bestRoute);
         return bestRoute;
     }
 }
