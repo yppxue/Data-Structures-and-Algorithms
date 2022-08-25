@@ -85,10 +85,74 @@ public class RasterAPIHandler extends APIRouteHandler<Map<String, Double>, Map<S
     @Override
     public Map<String, Object> processRequest(Map<String, Double> requestParams, Response response) {
         //System.out.println("yo, wanna know the parameters given by the web browser? They are:");
-        //System.out.println(requestParams);
+        System.out.println(requestParams);
         Map<String, Object> results = new HashMap<>();
-        System.out.println("Since you haven't implemented RasterAPIHandler.processRequest, nothing is displayed in "
-                + "your browser.");
+//        System.out.println("Since you haven't implemented RasterAPIHandler.processRequest, nothing is displayed in "
+//                + "your browser.");
+        double target_lrlon = requestParams.get("lrlon");
+        double target_ullon = requestParams.get("ullon");
+        double w = requestParams.get("w");
+        double h = requestParams.get("h");
+        double target_ullat = requestParams.get("ullat");
+        double target_lrlat = requestParams.get("lrlat");
+
+        if (target_lrlat < Constants.ROOT_LRLAT && target_ullat > Constants.ROOT_ULLAT && target_lrlon > Constants.ROOT_LRLON && target_ullon < Constants.ROOT_ULLON){
+            queryFail();
+        }
+
+        int depth = 0;
+        //calculate LonDPP per depth:
+        for (int i = 0; i <= 7; i++){
+            double lonDPP = Math.abs(Constants.ROOT_ULLON - Constants.ROOT_LRLON) / (Math.pow(2, i) * 256);
+            double query_lonDPP = Math.abs(target_ullon - target_lrlon) / w;
+            if (lonDPP < query_lonDPP){
+                depth = i;
+                break;
+            }
+            depth = i;
+        }
+
+        double y_tile = Math.abs(Constants.ROOT_ULLAT - Constants.ROOT_LRLAT) / Math.pow(2, depth);
+        double x_tile = Math.abs(Constants.ROOT_ULLON - Constants.ROOT_LRLON) / Math.pow(2, depth);
+        int xMin, yMin, xMax, yMax;
+        if (target_lrlon > Constants.ROOT_LRLON){ xMin = 0; }
+        else{ xMin = (int) (Math.floor(((Math.abs(target_ullon - Constants.ROOT_ULLON))/x_tile))); }
+        if (target_lrlat < Constants.ROOT_LRLAT){ yMin = 0; }
+        else {yMin = (int) (Math.floor(((Math.abs(target_ullat - Constants.ROOT_ULLAT))/y_tile))); }
+        if (target_ullon < Constants.ROOT_ULLON) { xMax = (int) (Math.pow(2, depth)) - 1; }
+        else {xMax = (int) (Math.floor(((Math.abs(target_lrlon - Constants.ROOT_ULLON))/x_tile))); }
+        if (target_ullat > Constants.ROOT_ULLAT) { yMax = (int) (Math.pow(2, depth)) - 1; }
+        else {yMax = (int) (Math.floor(((Math.abs(target_lrlat - Constants.ROOT_ULLAT))/y_tile))); }
+        //return new int[]{xMin, yMin, xMax, yMax};
+        String[][] files = new String[yMax - yMin + 1][xMax - xMin + 1];
+        int m = 0;
+        for (int i = yMin; i <= yMax; i++){
+            int n = 0;
+            for (int j = xMin; j <= xMax; j++){
+                files[m][n] = String.format("d%s_x%s_y%s.png", depth, j, i);
+//                System.out.print(files[m][n]);
+//                System.out.print("    ");
+                n++;
+            }
+            m++;
+//            System.out.println();
+        }
+
+        //rastered image bounding coordinates:
+        double raster_ul_lon = xMin * x_tile + Constants.ROOT_ULLON;
+        double raster_ul_lat = - yMin * y_tile + Constants.ROOT_ULLAT;
+        double raster_lr_lon = (xMax + 1) * x_tile + Constants.ROOT_ULLON;
+        double raster_lr_lat = - (yMax + 1) * y_tile + Constants.ROOT_ULLAT;
+
+        //writing into results map
+        results.put("render_grid", files);
+        results.put("raster_ul_lon", raster_ul_lon);
+        results.put("raster_ul_lat", raster_ul_lat);
+        results.put("raster_lr_lon", raster_lr_lon);
+        results.put("raster_lr_lat", raster_lr_lat);
+        results.put("depth", depth);
+        results.put("query_success", true);
+
         return results;
     }
 
