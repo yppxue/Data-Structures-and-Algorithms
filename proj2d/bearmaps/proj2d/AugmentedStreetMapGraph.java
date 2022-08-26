@@ -4,6 +4,8 @@ import bearmaps.proj2ab.KdTree;
 import bearmaps.proj2ab.Point;
 import bearmaps.proj2c.streetmap.StreetMapGraph;
 import bearmaps.proj2c.streetmap.Node;
+import bearmaps.proj2d.trie.MyTrieSet;
+import org.w3c.dom.ls.LSInput;
 
 import java.util.*;
 
@@ -18,7 +20,10 @@ public class AugmentedStreetMapGraph extends StreetMapGraph {
 
     List<Point> points;
     Map<Point, Node> pointNodeMap;
+    Map<String, String> cleanedNameMap;
+    Map<String, List<Node>> nameNodeMap;
     KdTree kd;
+    MyTrieSet locTrie;
 
     public AugmentedStreetMapGraph(String dbPath) {
         super(dbPath);
@@ -26,11 +31,27 @@ public class AugmentedStreetMapGraph extends StreetMapGraph {
         List<Node> nodes = this.getNodes();
         points = new ArrayList<>();
         pointNodeMap = new HashMap<>();
+        locTrie = new MyTrieSet();
+        cleanedNameMap = new HashMap<>();
+        nameNodeMap = new HashMap<>();
         for (Node node : nodes){
             Point point = new Point(node.lon(), node.lat());
             if (neighbors(node.id()).size() > 0){
                 points.add(point);
                 pointNodeMap.put(point, node);
+            }
+            if (node.name() != null) {
+                String cleanedName = cleanString(node.name());
+                locTrie.add(cleanedName);
+                cleanedNameMap.put(cleanedName, node.name());
+                if (!nameNodeMap.containsKey(cleanedName)){
+                    List<Node> nodeList = new ArrayList<>();
+                    nodeList.add(node);
+                    nameNodeMap.put(cleanedName, nodeList);
+                }else{
+                    List<Node> nodeList = nameNodeMap.get(cleanedName);
+                    nodeList.add(node);
+                }
             }
         }
         kd = new KdTree(points);
@@ -60,7 +81,13 @@ public class AugmentedStreetMapGraph extends StreetMapGraph {
      * cleaned <code>prefix</code>.
      */
     public List<String> getLocationsByPrefix(String prefix) {
-        return new LinkedList<>();
+        List<String> cleanedName = locTrie.keysWithPrefix(prefix);
+        List<String> locations = new ArrayList<>();
+        for (String name : cleanedName){
+            String realName = cleanedNameMap.get(name);
+            locations.add(realName);
+        }
+        return locations;
     }
 
     /**
@@ -77,7 +104,17 @@ public class AugmentedStreetMapGraph extends StreetMapGraph {
      * "id" -> Number, The id of the node. <br>
      */
     public List<Map<String, Object>> getLocations(String locationName) {
-        return new LinkedList<>();
+        List<Node> locList = nameNodeMap.get(cleanString(locationName));
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (Node node : locList){
+            Map<String, Object> loc = new HashMap<>();
+            loc.put("lat", node.lat());
+            loc.put("lon", node.lon());
+            loc.put("name", node.name());
+            loc.put("id", node.id());
+            results.add(loc);
+        }
+        return results;
     }
 
 
